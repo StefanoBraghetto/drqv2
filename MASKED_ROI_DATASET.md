@@ -1,12 +1,27 @@
 # Masked-ROI dataset — where it lives now
 
 The masked-ROI dataset (972 episodes, ~3.75M frames: 180x180 RGB frames plus
-binary ROI masks) is no longer unpacked on this machine.
+binary ROI masks) is split across two places, and no longer unpacked on this
+machine.
 
-| what | where |
-|---|---|
-| Published copy (canonical) | `Stefanobraghetto/dreamer4-masked-roi-180` on HuggingFace |
-| Packed local archive | `/media/stefano/ExternalSSD/PhD/drqv2/masked-roi-180-tars/` |
+| what | where | visibility |
+|---|---|---|
+| Frames (83.1 GiB) | `Stefanobraghetto/dreamer4-masked-roi-180` on HuggingFace | public |
+| Masks (4.2 GiB) | `Stefanobraghetto/dreamer4-masked-roi-180-masks` on HuggingFace | **private** |
+| Packed local archive, both | `/media/stefano/ExternalSSD/PhD/drqv2/masked-roi-180-tars/` | — |
+
+## Why it was split
+
+The combined dataset is 104.3 GB, which exceeds the 100 GB private-storage
+allowance of a free Hugging Face account, so it could not be made private at
+all. It was also measured to be 98.3% reproducible: the published 180x180
+frames are a **bit-exact bilinear resize** of the released 224x224 Dreamer4
+frames (mean absolute difference 0.00 against
+`raw-dreamer4/expert/walker-stand-1.png`, frame 2004 — a resize, not a crop).
+
+So the frames stay public and reproducible, and the only genuinely original
+output — the binary ROI masks — sits in a private repo. The private dataset's
+card documents the frame-derivation recipe in full.
 
 ## Why the local copy is packed
 
