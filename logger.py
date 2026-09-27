@@ -70,7 +70,8 @@ class MetersGroup(object):
         with self._csv_file_name.open('w') as f:
             writer = csv.DictWriter(f,
                                     fieldnames=sorted(data.keys()),
-                                    restval=0.0)
+                                    restval=0.0,
+                                    extrasaction='ignore')
             writer.writeheader()
             for row in rows:
                 writer.writerow(row)

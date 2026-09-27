@@ -46,7 +46,14 @@ def soft_update_params(net, target_net, tau):
 
 
 def to_torch(xs, device):
-    return tuple(torch.as_tensor(x, device=device) for x in xs)
+    obs, action, reward, discount, next_obs = xs
+    return (
+        torch.as_tensor(obs, device=device),
+        torch.as_tensor(action, device=device, dtype=torch.float32),
+        torch.as_tensor(reward, device=device, dtype=torch.float32),
+        torch.as_tensor(discount, device=device, dtype=torch.float32),
+        torch.as_tensor(next_obs, device=device),
+    )
 
 
 def weight_init(m):

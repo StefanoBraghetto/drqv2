@@ -10,3 +10,16 @@ exp_drqv2_*.py
 dmc_benchmarks.py
 check_sweep.py
 cancel_sweep.py
+
+# ── PhD work: local artifacts, not source ────────────────────────────────────
+# The masked-ROI dataset this repo's custom/ scripts generate (253 GiB); the
+# mask gallery, predictor training outputs, replay buffer and tensorboard runs
+# are all derived and are rebuilt by custom/mask_dataset_builder and
+# custom/mask_predictor.
+dreamer4_masked_dataset_all37_180/
+mask_gallery_all37/
+mask_predictor_runs/
+buffer/
+tb/
+snapshot.pt
+generated_mask_dataset_run.log

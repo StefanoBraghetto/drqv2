@@ -49,8 +49,17 @@ class ReplayBufferStorage:
         for spec in self._data_specs:
             value = time_step[spec.name]
             if np.isscalar(value):
-                value = np.full(spec.shape, value, spec.dtype)
-            assert spec.shape == value.shape and spec.dtype == value.dtype
+                value = np.full(spec.shape, value, dtype=spec.dtype)
+            else:
+                value = np.asarray(value, dtype=spec.dtype)
+                if value.shape != spec.shape:
+                    if value.size == int(np.prod(spec.shape)):
+                        value = value.reshape(spec.shape)
+                    else:
+                        raise ValueError(
+                            f"Replay spec mismatch for {spec.name}: expected shape={spec.shape}, "
+                            f"dtype={spec.dtype}, got shape={value.shape}, dtype={value.dtype}"
+                        )
             self._current_episode[spec.name].append(value)
         if time_step.last():
             episode = dict()

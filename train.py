@@ -15,6 +15,7 @@ import hydra
 import numpy as np
 import torch
 from dm_env import specs
+from hydra.core.hydra_config import HydraConfig
 
 import dmc
 import utils
@@ -33,7 +34,7 @@ def make_agent(obs_spec, action_spec, cfg):
 
 class Workspace:
     def __init__(self, cfg):
-        self.work_dir = Path.cwd()
+        self.work_dir = Path(HydraConfig.get().runtime.output_dir)
         print(f'workspace: {self.work_dir}')
 
         self.cfg = cfg
@@ -199,20 +200,22 @@ class Workspace:
     def load_snapshot(self):
         snapshot = self.work_dir / 'snapshot.pt'
         with snapshot.open('rb') as f:
-            payload = torch.load(f)
+            payload = torch.load(f, weights_only=False)
         for k, v in payload.items():
             self.__dict__[k] = v
 
 
-@hydra.main(config_path='cfgs', config_name='config')
+@hydra.main(version_base=None, config_path='cfgs', config_name='config')
 def main(cfg):
     from train import Workspace as W
-    root_dir = Path.cwd()
     workspace = W(cfg)
-    snapshot = root_dir / 'snapshot.pt'
+    snapshot = workspace.work_dir / 'snapshot.pt'
     if snapshot.exists():
         print(f'resuming: {snapshot}')
         workspace.load_snapshot()
+    if bool(cfg.get('eval_only', False)):
+        workspace.eval()
+        return
     workspace.train()
 
 

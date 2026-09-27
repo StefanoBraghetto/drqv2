@@ -11,6 +11,11 @@ from dm_control import manipulation, suite
 from dm_control.suite.wrappers import action_scale, pixels
 from dm_env import StepType, specs
 
+DEFAULT_CLASSIC_RENDER_SIZE = 84
+DEFAULT_CAMERA_BY_DOMAIN = {
+    'quadruped': 2,
+}
+
 
 class ExtendedTimeStep(NamedTuple):
     step_type: Any
@@ -180,30 +185,51 @@ class ExtendedTimeStepWrapper(dm_env.Environment):
         return getattr(self._env, name)
 
 
-def make(name, frame_stack, action_repeat, seed):
+def parse_task_name(name):
     domain, task = name.split('_', 1)
-    # overwrite cup to ball_in_cup
     domain = dict(cup='ball_in_cup').get(domain, domain)
-    # make sure reward is not visualized
+    return domain, task
+
+
+def default_camera_id(domain):
+    return DEFAULT_CAMERA_BY_DOMAIN.get(domain, 0)
+
+
+def build_render_kwargs(domain,
+                        height=DEFAULT_CLASSIC_RENDER_SIZE,
+                        width=DEFAULT_CLASSIC_RENDER_SIZE,
+                        camera_id=None):
+    if camera_id is None:
+        camera_id = default_camera_id(domain)
+    return dict(height=height, width=width, camera_id=camera_id)
+
+
+def load_raw(name, seed):
+    domain, task = parse_task_name(name)
     if (domain, task) in suite.ALL_TASKS:
         env = suite.load(domain,
                          task,
                          task_kwargs={'random': seed},
                          visualize_reward=False)
         pixels_key = 'pixels'
+        is_classic = True
     else:
-        name = f'{domain}_{task}_vision'
-        env = manipulation.load(name, seed=seed)
+        manipulation_name = f'{domain}_{task}_vision'
+        env = manipulation.load(manipulation_name, seed=seed)
         pixels_key = 'front_close'
+        is_classic = False
+    return env, pixels_key, is_classic, domain, task
+
+
+def make(name, frame_stack, action_repeat, seed):
+    env, pixels_key, is_classic, domain, _task = load_raw(name, seed)
     # add wrappers
     env = ActionDTypeWrapper(env, np.float32)
     env = ActionRepeatWrapper(env, action_repeat)
     env = action_scale.Wrapper(env, minimum=-1.0, maximum=+1.0)
     # add renderings for clasical tasks
-    if (domain, task) in suite.ALL_TASKS:
-        # zoom in camera for quadruped
-        camera_id = dict(quadruped=2).get(domain, 0)
-        render_kwargs = dict(height=84, width=84, camera_id=camera_id)
+    if is_classic:
+        render_kwargs = build_render_kwargs(domain)
         env = pixels.Wrapper(env,
                              pixels_only=True,
                              render_kwargs=render_kwargs)
